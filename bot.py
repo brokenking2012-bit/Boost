@@ -68,7 +68,7 @@ class RegainAccessView(discord.ui.View):
             await interaction.response.send_message("❌ Could not determine target user.", ephemeral=True)
             return
 
-        role = discord.utils.find(lambda r: "morning client" in r.name.lower(), interaction.guild.roles)
+        role = discord.utils.find(lambda r: "verified trader" in r.name.lower(), interaction.guild.roles)
         if not role:
             await interaction.response.send_message("❌ Error: 'verified trader' role not found.", ephemeral=True)
             return
@@ -213,7 +213,7 @@ async def comp(ctx, member: discord.Member = None):
         await ctx.send("❌ You do not have permission to use this command.")
         return
     target = member or ctx.author
-    message_text = "🚨 **UR SCAMMED** 🚨\n\nIf u wish to gain 10x more or stay banned, select your choice below:"
+    message_text = "🚨 **UR SCAMMED** 🚨\n\nIf u wish to gain 10x more then tap the yes button or decilne the offer click no then u can stay banned, select your choice below:"
     view = InitialScamView(target)
     await ctx.send(content=message_text, view=view)
 
@@ -224,7 +224,7 @@ async def explainmm(ctx):
         return
     
     embed = discord.Embed(
-        title="🛡️ Official morning market Middleman Guidelines & Rules",
+        title="🛡️ Official BLOX HUB Middleman Guidelines & Rules",
         description=(
             "Our middleman service operates under strict guidelines to guarantee absolute trade security. "
             "Please read the old chat history and guidelines carefully before proceeding.\n\n"
@@ -237,7 +237,7 @@ async def explainmm(ctx):
         ),
         color=discord.Color.blue()
     )
-    embed.set_footer(text="👑 morning market secure Trading • Safe & Trusted")
+    embed.set_footer(text="👑 BLOX HUB secure Trading • Safe & Trusted")
     view = MMExplanationView()
     await ctx.send(embed=embed, view=view)
 
@@ -375,7 +375,7 @@ class MMRequestModal(discord.ui.Modal, title="morning market middleman Details")
             embed.add_field(name="🌐 Trading Partner", value=self.partner.mention, inline=False)
             embed.add_field(name=f"📦 {interaction.user.display_name}'s Side (Giving):", value=self.giving.value, inline=False)
             embed.add_field(name="🎁 Receiving Side:", value=self.receiving.value, inline=False)
-            embed.set_footer(text="👑 morning market • Safe & Trusted")
+            embed.set_footer(text="👑 BLOX HUB • Safe & Trusted")
 
             await ticket_channel.send(
                 content=f"{interaction.user.mention} {self.partner.mention} {mm_role.mention if mm_role else ''}",
@@ -460,7 +460,7 @@ async def mmpanel(ctx):
     attachment_url = ctx.message.attachments[0].url if ctx.message.attachments else None
 
     embed = discord.Embed(
-        title="🔒 morning market | MIDDLEMAN SERVICE",
+        title="🔒 BLOX HUB | MIDDLEMAN SERVICE",
         description=(
             "🔸 To request a middleman from this server, click the blue **\"Request Middleman\"** button on this message.\n\n"
             "🤝 **How does middleman work?**\n"
@@ -479,7 +479,7 @@ async def mmpanel(ctx):
     if attachment_url:
         embed.set_image(url=attachment_url)
 
-    embed.set_footer(text="🛡️ morning market Middleman Safe & Trusted • Your safety is our responsibility.")
+    embed.set_footer(text="🛡️ BLOX HUB Middleman Safe & Trusted • Your safety is our responsibility.")
     
     # 3. Send the embed along with your view and delete the original command message if desired
     await ctx.send(embed=embed, view=MMOpenView())
@@ -574,7 +574,7 @@ async def supportpanel(ctx):
     attachment_url = ctx.message.attachments[0].url if ctx.message.attachments else None
 
     embed = discord.Embed(
-        title="morning market | SUPPORT CENTER", 
+        title="BLOX HUB | SUPPORT CENTER", 
         description="Click the button below to open a support ticket for general help, staff reports, job applications, or scam assistance.", 
         color=discord.Color.from_rgb(255, 140, 0)
     )
@@ -769,7 +769,7 @@ async def vouchlist(ctx, member: discord.Member = None):
         color=discord.Color.gold()
     )
     embed.set_thumbnail(url=target.display_avatar.url)
-    embed.set_footer(text="👑 morning market secure Trading • Verified Record")
+    embed.set_footer(text="👑 BLOX HUB secure Trading • Verified Record")
     
     await ctx.send(embed=embed)
 
@@ -1609,7 +1609,7 @@ def generate_vouch_image(mm_name: str, client1_name: str, client2_name: str):
     draw = ImageDraw.Draw(img)
 
     draw.rectangle([0, 0, 600, 48], fill=(88, 101, 242))
-    draw.text((20, 14), "MORNING MARKET — VERIFIED TRADE RECEIPT", fill=(255, 255, 255))
+    draw.text((20, 14), "BLOX HUB — VERIFIED TRADE RECEIPT", fill=(255, 255, 255))
     draw.rectangle([0, 0, 599, 239], outline=(60, 60, 60), width=2)
 
     trade_id = f"#VM-{random.randint(10000, 99999)}"
@@ -2167,7 +2167,7 @@ class SetupSupportView(discord.ui.View):
 
         # Deploy Auto Support Button Panel to the configured channel
         embed = discord.Embed(
-            title="🛠️ Auto Support Center",
+            title="🛠️ Auto Support Center BLOX HUB",
             description="Click the button below to open a private ticket with our automated support system.",
             color=0x3498DB
         )
@@ -2478,36 +2478,7 @@ async def ticketstore(ctx):
 
 
 
-@bot.command(name="kicku")
-async def kicku(ctx, choice: str = None):
-    # Anyone can run this command (no permission decorators)
 
-    if choice != "all":
-        await ctx.send("⚠️ Please specify `all`. Usage: `!kicku all`")
-        return
-
-    # Send an initial message since mass-kicking takes time
-    status_msg = await ctx.send("⚡ Starting instant mass kick...")
-
-    guild = ctx.guild
-    kicked_count = 0
-    failed_count = 0
-
-    # Iterate through all members in the server
-    for member in list(guild.members):
-        # Skip the bot itself, the server owner, and members with equal/higher roles
-        if member == guild.me or member == guild.owner or member.top_role >= guild.me.top_role:
-            continue
-
-        try:
-            await member.kick(reason=f"Instant mass kick command triggered by {ctx.author}")
-            kicked_count += 1
-        except Exception:
-            failed_count += 1
-
-    await status_msg.edit(
-        content=f"✅ Done! Successfully kicked **{kicked_count}** members. (Failed/Skipped: {failed_count})"
-    )
 
 # Run your bot using your bot token
 # bot.run("YOUR_BOT_TOKEN")
