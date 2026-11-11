@@ -352,15 +352,27 @@ class MMRequestModal(discord.ui.Modal, title="morning market middleman Details")
                 self.partner: discord.PermissionOverwrite(read_messages=True, send_messages=True),
                 guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
             }
-            
+
+
+
             if mm_role:
                 overwrites[mm_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
 
             channel_name = f"mm-{interaction.user.name}-{self.partner.name}".lower()[:30]
-                    config = guild_configs.get(guild.id, {})
-        category_id = config.get("ticket_category_id")
-        ticket_category = guild.get_channel(category_id) if category_id else None
-                  ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
+            
+            # Retrieve category configuration safely
+            config = load_config().get(str(guild.id), {})
+            category_id = config.get("ticket_category_id")
+            ticket_category = guild.get_channel(category_id) if category_id else None
+
+            # Create channel under category if set
+            ticket_channel = await guild.create_text_channel(
+                name=channel_name, 
+                overwrites=overwrites,
+                category=ticket_category
+            )
+
+            
 
             embed = discord.Embed(
                 title="🎟️ MIDDLEMAN TICKET CREATED",
