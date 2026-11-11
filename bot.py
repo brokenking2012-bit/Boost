@@ -2479,6 +2479,145 @@ async def ticketstore(ctx):
 
 
 
+CONFIG_FILE = "guild_config.json"
+
+def load_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_config(config):
+    with open(CONFIG_FILE, "w") as f:
+        json.dump(config, f, indent=4)
+
+class TicketAndStatsCog(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        self.config = load_config()
+
+    # --- 1. /close choose (Set log channel) ---
+    @app_commands.command(name="close-choose", description="Choose the channel where closed ticket transcripts will be logged.")
+    @app_commands.describe(channel="The channel to send transcripts to")
+    async def close_choose(self, interaction: discord.Interaction, channel: discord.TextChannel):
+        # Optional: restrict to admin/moderator
+        if not interaction.user.guild_permissions.manage_channels:
+            await interaction.response.send_message("❌ You need **Manage Channels** permission to use this command.", ephemeral=True)
+            return
+
+        guild_id = str(interaction.guild.id)
+        if guild_id not in self.config:
+            self.config[guild_id] = {}
+        
+        self.config[guild_id]["log_channel_id"] = channel.id
+        save_config(self.config)
+
+        await interaction.response.send_message(f"✅ Success! Ticket transcripts will now be sent to {channel.mention}.", ephemeral=True)
+
+    # --- 2. /close (Close ticket, generate transcript, DM user, log) ---
+    @app_commands.command(name="close", description="Closes the active ticket, DMs transcript, and logs it.")
+    @app_commands.describe(reason="Reason for closing the ticket")
+    async def close(self, interaction: discord.Interaction, reason: str = "No reason provided"):
+        guild_id = str(interaction.guild.id)
+        
+        # Check if log channel is set
+        log_channel_id = self.config.get(guild_id, {}).get("log_channel_id")
+        if not log_channel_id:
+            await interaction.response.send_message(
+                "❌ Please configure a transcript channel first using `/close-choose #channel`!", ephemeral=True
+            )
+            return
+
+        log_channel = interaction.guild.get_channel(log_channel_id)
+        if not log_channel:
+            await interaction.response.send_message("❌ The configured transcript channel no longer exists.", ephemeral=True)
+            return
+
+        await interaction.response.defer(thinking=True)
+
+        channel = interaction.channel
+        
+        # Generate transcript from channel message history (last 500 messages)
+        messages = []
+        async for msg in channel.history(limit=500, oldest_first=True):
+            timestamp = msg.created_at.strftime("%Y-%m-%d %H:%M:%S")
+            messages.append(f"[{timestamp}] {msg.author}: {msg.content}")
+        
+        transcript_text = f"--- TICKET TRANSCRIPT: {channel.name} ---\nClosed by: {interaction.user}\nReason: {reason}\n\n" + "\n".join(messages)
+        transcript_file = discord.File(
+            fp=io.BytesIO(transcript_text.encode("utf-8")),
+            filename=f"transcript-{channel.name}.txt"
+        )
+
+        # Attempt to find the ticket creator or members who participated in the ticket
+        # Looking at channel permission overwrites or non-bot members who sent messages
+        target_member = None
+        for target, overwrite in channel.overwrites.items():
+            if isinstance(target, discord.Member) and not target.bot and target != interaction.guild.me:
+                target_member = target
+                break
+
+        # Send DM to the ticket user if found
+        if target_member:
+            try:
+                dm_embed = discord.Embed(
+                    title="🔒 Your Ticket Has Been Closed",
+                    description=f"Your ticket in **{interaction.guild.name}** has been closed.",
+                    color=discord.Color.red()
+                )
+                dm_embed.add_field(name="Reason", value=reason, inline=False)
+                await target_member.send(embed=dm_embed, file=discord.File(
+                    fp=io.BytesIO(transcript_text.encode("utf-8")),
+                    filename=f"transcript-{channel.name}.txt"
+                ))
+            except Exception:
+                pass # User might have DMs closed
+
+        # Send log to the designated log channel
+        log_embed = discord.Embed(
+            title="📁 Ticket Closed",
+            color=discord.Color.orange(),
+            timestamp=discord.utils.utcnow()
+        )
+        log_embed.add_field(name="Ticket Name", value=channel.name, inline=True)
+        log_embed.add_field(name="Closed By", value=interaction.user.mention, inline=True)
+        log_embed.add_field(name="Reason", value=reason, inline=False)
+        
+        await log_channel.send(embed=log_embed, file=transcript_file)
+
+        # Notify in channel and delete after 5 seconds
+        await interaction.followup.send("🔒 Ticket transcript saved and sent. Closing channel in 5 seconds...")
+        import asyncio
+        await asyncio.sleep(5)
+        try:
+            await channel.delete(reason=f"Ticket closed by {interaction.user}: {reason}")
+        except Exception:
+            pass
+
+    # --- 3. /w (Server members and online count) ---
+    @app_commands.command(name="w", description="Shows server member count and online status.")
+    async def w(self, interaction: discord.Interaction):
+        guild = interaction.guild
+        
+        total_members = guild.member_count
+        # Count members whose status is not offline (online, idle, dnd)
+        online_members = sum(1 for m in guild.members if m.status != discord.Status.offline)
+        
+        embed = discord.Embed(
+            title=f"📊 {guild.name} Statistics",
+            color=discord.Color.blue()
+        )
+        embed.add_field(name="👥 Total Members", value=str(total_members), inline=True)
+        embed.add_field(name="🟢 Online Members", value=str(online_members), inline=True)
+        
+        await interaction.response.send_message(embed=embed)
+
+async def setup(bot):
+    await bot.add_cog(TicketAndStatsCog(bot))
+
+
+
+
 
 # Run your bot using your bot token
 # bot.run("YOUR_BOT_TOKEN")
