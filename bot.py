@@ -517,7 +517,9 @@ class SupportSelect(discord.ui.Select):
         ]
         super().__init__(placeholder="Select a support category...", min_values=1, max_values=1, options=options)
 
-    async def callback(self, interaction: discord.Interaction):
+    
+
+async def callback(self, interaction: discord.Interaction):
         selected_option = self.values[0]
         await interaction.response.send_message(f"🔄 Creating your support ticket for **{selected_option}**, please wait...", ephemeral=True)
 
@@ -535,11 +537,17 @@ class SupportSelect(discord.ui.Select):
 
             clean_name = selected_option.lower().replace(" ", "-")
             channel_name = f"sup-{clean_name}-{interaction.user.name}".lower()[:30]
-                    config = guild_configs.get(guild.id, {})
-        category_id = config.get("ticket_category_id")
-        ticket_category = guild.get_channel(category_id) if category_id else None
-        
-            ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
+            
+            # Safely grab category configuration
+            config = load_config().get(str(guild.id), {})
+            category_id = config.get("ticket_category_id")
+            ticket_category = guild.get_channel(category_id) if category_id else None
+            
+            ticket_channel = await guild.create_text_channel(
+                name=channel_name, 
+                overwrites=overwrites,
+                category=ticket_category
+            )
 
             embed = discord.Embed(
                 title=f"SUPPORT TICKET: {selected_option}",
@@ -550,6 +558,8 @@ class SupportSelect(discord.ui.Select):
             await interaction.edit_original_response(content=f"✅ Ticket created successfully: {ticket_channel.mention}")
         except Exception as e:
             await interaction.edit_original_response(content=f"❌ Error creating ticket: `{e}`")
+
+
 
 class SupportSelectView(discord.ui.View):
     def __init__(self):
