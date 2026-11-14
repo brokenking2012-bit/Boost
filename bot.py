@@ -68,7 +68,7 @@ class RegainAccessView(discord.ui.View):
             await interaction.response.send_message("❌ Could not determine target user.", ephemeral=True)
             return
 
-        role = discord.utils.find(lambda r: "verified trader" in r.name.lower(), interaction.guild.roles)
+        role = discord.utils.find(lambda r: "gameboost family" in r.name.lower(), interaction.guild.roles)
         if not role:
             await interaction.response.send_message("❌ Error: 'verified trader' role not found.", ephemeral=True)
             return
@@ -224,7 +224,7 @@ async def explainmm(ctx):
         return
     
     embed = discord.Embed(
-        title="🛡️ Official BLOX HUB Middleman Guidelines & Rules",
+        title="🛡️ Official GameBoost Middleman Guidelines & Rules",
         description=(
             "Our middleman service operates under strict guidelines to guarantee absolute trade security. "
             "Please read the old chat history and guidelines carefully before proceeding.\n\n"
@@ -321,7 +321,7 @@ async def demo(ctx, member: discord.Member, *, role_name: str):
 
 # ==================== MIDDLEMAN TICKET SYSTEM CLASSES ====================
 
-class MMRequestModal(discord.ui.Modal, title="morning market middleman Details"):
+class MMRequestModal(discord.ui.Modal, title="GameBoost middleman Details"):
     giving = discord.ui.TextInput(
         label="What are YOU giving?",
         placeholder="e.g., Dragon Fruit, Kitsune",
@@ -387,7 +387,7 @@ class MMRequestModal(discord.ui.Modal, title="morning market middleman Details")
             embed.add_field(name="🌐 Trading Partner", value=self.partner.mention, inline=False)
             embed.add_field(name=f"📦 {interaction.user.display_name}'s Side (Giving):", value=self.giving.value, inline=False)
             embed.add_field(name="🎁 Receiving Side:", value=self.receiving.value, inline=False)
-            embed.set_footer(text="👑 BLOX HUB • Safe & Trusted")
+            embed.set_footer(text="👑 GameBoost • Safe & Trusted")
 
             await ticket_channel.send(
                 content=f"{interaction.user.mention} {self.partner.mention} {mm_role.mention if mm_role else ''}",
@@ -472,7 +472,7 @@ async def mmpanel(ctx):
     attachment_url = ctx.message.attachments[0].url if ctx.message.attachments else None
 
     embed = discord.Embed(
-        title="🔒 BLOX HUB | MIDDLEMAN SERVICE",
+        title="🔒 GameBoost | MIDDLEMAN SERVICE",
         description=(
             "🔸 To request a middleman from this server, click the blue **\"Request Middleman\"** button on this message.\n\n"
             "🤝 **How does middleman work?**\n"
@@ -491,7 +491,7 @@ async def mmpanel(ctx):
     if attachment_url:
         embed.set_image(url=attachment_url)
 
-    embed.set_footer(text="🛡️ BLOX HUB Middleman Safe & Trusted • Your safety is our responsibility.")
+    embed.set_footer(text="🛡️ GameBoost Middleman Safe & Trusted • Your safety is our responsibility.")
     
     # 3. Send the embed along with your view and delete the original command message if desired
     await ctx.send(embed=embed, view=MMOpenView())
@@ -596,7 +596,7 @@ async def supportpanel(ctx):
     attachment_url = ctx.message.attachments[0].url if ctx.message.attachments else None
 
     embed = discord.Embed(
-        title="BLOX HUB | SUPPORT CENTER", 
+        title="GameBoost | SUPPORT CENTER", 
         description="Click the button below to open a support ticket for general help, staff reports, job applications, or scam assistance.", 
         color=discord.Color.from_rgb(255, 140, 0)
     )
@@ -791,7 +791,7 @@ async def vouchlist(ctx, member: discord.Member = None):
         color=discord.Color.gold()
     )
     embed.set_thumbnail(url=target.display_avatar.url)
-    embed.set_footer(text="👑 BLOX HUB secure Trading • Verified Record")
+    embed.set_footer(text="👑 GameBoost secure Trading • Verified Record")
     
     await ctx.send(embed=embed)
 
@@ -1631,7 +1631,7 @@ def generate_vouch_image(mm_name: str, client1_name: str, client2_name: str):
     draw = ImageDraw.Draw(img)
 
     draw.rectangle([0, 0, 600, 48], fill=(88, 101, 242))
-    draw.text((20, 14), "BLOX HUB — VERIFIED TRADE RECEIPT", fill=(255, 255, 255))
+    draw.text((20, 14), "GameBoost : VERIFIED TRADE RECEIPT", fill=(255, 255, 255))
     draw.rectangle([0, 0, 599, 239], outline=(60, 60, 60), width=2)
 
     trade_id = f"#VM-{random.randint(10000, 99999)}"
